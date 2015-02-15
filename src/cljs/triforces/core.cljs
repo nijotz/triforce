@@ -2,10 +2,12 @@
 
 (enable-console-print!)
 
+(def mouse-state (atom {}))
+
 (defn render-scene [[ctx width height] state]
     (println "Render scene")
     (set! (. ctx -fillStyle) "#000")
-    (.fillRect ctx 0 0 100 100))
+    (.fillRect ctx (@mouse-state :x) (@mouse-state :y) 100 100))
 
 (defn update-state [state]
     (println "Update state"))
@@ -32,7 +34,19 @@
             (set! (. target -width) width)
             (set! (. target -height) height)]))
 
+
+(defn hook-input-events []
+    (.addEventListener js/document "mousemove"
+        (fn [e]
+            (set-mouse-state :x (. e -clientX))
+            (set-mouse-state :y (. e -clientY))
+            false)))
+
+(defn set-mouse-state [code, value]
+    (swap! mouse-state assoc code value))
+
 (defn ^:export init []
     (let [ctx (context 640 480)] [
         (println "Context: " ctx)
+        (hook-input-events)
         (tick ctx (create-state))]))
