@@ -10,7 +10,10 @@
     ;(println "Actors: " (get state :actors))
     (doseq [actor (get state :actors)]
         ;(println "Actor: " actor)
-        (.fillRect ctx (get actor :x) (get actor :y) 10 10)))
+        (.beginPath ctx)
+        (.arc ctx (get actor :x) (get actor :y) 5, 0, (* 2 (.-PI js/Math)), false)
+        (set! ctx -fillStyle "green")
+        (.fill ctx)))
 
 (defn create-state [] {:actors []})
 
