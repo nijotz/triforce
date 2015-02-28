@@ -16,7 +16,9 @@
                  [rm-hull/big-bang "0.0.1-SNAPSHOT"]
                  [rm-hull/monet "0.2.1"]]
 
-  :plugins [[lein-cljsbuild "1.0.3"]]
+  :plugins [
+      [lein-cljsbuild "1.0.5"]
+      [lein-gorilla "0.3.4"]]
 
   :hooks [leiningen.cljsbuild]
 
