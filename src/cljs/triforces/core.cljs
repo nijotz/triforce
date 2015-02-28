@@ -19,16 +19,19 @@
 
 (defn update-state [state]
     ;(println "Update state")
-    (->
-        (let [x (@mouse-state :mousex)
-              y (@mouse-state :mousey)]
-            (if (and (> x 0) (> y 0)) (do
-                ;(println "x: " x)
-                ;(println "y: " y)
-                (clear-mouse-state)
-                (create-actor state x y))
-            (identity state)))
+    (-> state
+        handle-mouse-click
         move-actors))
+
+(defn handle-mouse-click [state]
+    (let [x (@mouse-state :mousex)
+          y (@mouse-state :mousey)]
+        (if (and (> x 0) (> y 0)) (do
+            ;(println "x: " x)
+            ;(println "y: " y)
+            (clear-mouse-state)
+            (create-actor state x y))
+        (identity state))))
 
 (defn move-actors [state]
     (assoc state :actors
