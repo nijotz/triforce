@@ -3,12 +3,8 @@
 (ns triforces.core-test
   (:require-macros [cemerick.cljs.test :as m :refer (deftest testing are)])
   (:require [cemerick.cljs.test :as t]
-            [triforces.core :refer (foo)]))
+            [triforces.core :refer (vec-len)]))
 
-(deftest foo-test
-  (testing "I don't do a lot\n"
-    (testing "Edge cases\n"
-      (testing "(foo str)"
-        (are [expected actual] (= expected actual)
-             "ClojureScript!" (foo "")
-             "Hello, ClojureScript!" (foo nil))))))
+(deftest normalize-vector
+  (testing "(vec-len 3 4)"
+    (is (= 5 (vec-len 3 4)))))

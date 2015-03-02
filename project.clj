@@ -13,12 +13,14 @@
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/clojurescript "0.0-2371"]
-                 [rm-hull/big-bang "0.0.1-SNAPSHOT"]
-                 [rm-hull/monet "0.2.1"]]
+                 [org.clojure/tools.trace "0.7.8"]
+                 [com.aphyr/prism "0.1.1"]
+                 [org.clojure/math.numeric-tower "0.0.4"]]
 
   :plugins [
       [lein-cljsbuild "1.0.5"]
-      [lein-gorilla "0.3.4"]]
+      [lein-gorilla "0.3.4"]
+      [com.aphyr/prism "0.1.1"]]
 
   :hooks [leiningen.cljsbuild]
 
@@ -36,5 +38,6 @@
              ;; Compilation Options
              :compiler
              {:output-to "dev-resources/public/js/triforces.js"
-              :optimizations :advanced
-              :pretty-print false}}}})
+              :optimizations :none
+              :pretty-print false
+              :source-map true}}}})
