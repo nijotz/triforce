@@ -13,16 +13,14 @@
 
 (def mouse-state (atom {:mousex -1 :mousey -1}))
 
-(defn render-scene [[ctx width height] state]
-    (println "Render scene")
-    (set! (. ctx -fillStyle) "#000")
-    ;(println "Actors: " (get state :actors))
-    (doseq [actor (get state :actors)]
-        ;(println "Actor: " actor)
-        (.beginPath ctx)
-        (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 (* 2 (.-PI js/Math)) false)
-        (set! ctx -fillStyle "green")
-        (.fill ctx)))
+(defn render-actor [[ctx width height] actor]
+    (.beginPath ctx)
+    (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 (* 2 (.-PI js/Math)) false)
+    (set! ctx -fillStyle "green")
+    (.fill ctx))
+
+(defn render-scene [canvas state]
+    (doseq [actor (get state :actors)] (render-actor canvas actor)))
 
 (defn create-state [] {:actors []})
 
