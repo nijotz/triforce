@@ -1,5 +1,4 @@
-(ns triforces.core
-    (:require [clojure.math.numeric-tower :as math]))
+(ns triforces.core)
 
 (enable-console-print!)
 
@@ -31,7 +30,7 @@
     (println "Update state")
     (-> state
         handle-mouse-click
-        attract-actors))
+        move-actors))
     (println "State: " state)
 
 (defn handle-mouse-click [state]
