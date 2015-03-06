@@ -2,6 +2,8 @@
 
 (enable-console-print!)
 
+(def pi (.-PI js/Math))
+(def tau (* pi 2))
 (def sqrt (.-sqrt js/Math))
 (def abs  (.-abs  js/Math))
 (defn sqr [x] (* x x))
@@ -11,42 +13,43 @@
 (defn vec-len [& coords]
     (sqrt (apply + (map sqr coords))))
 
-(def mouse-state (atom {:mousex -1 :mousey -1}))
+(defn create-state [context width height] {
+    :context context
+    :width width
+    :height height
+    :actors []})
 
-(defn render-actor [[ctx width height] actor]
-    (.beginPath ctx)
-    (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 (* 2 (.-PI js/Math)) false)
-    (set! ctx -fillStyle "green")
-    (.fill ctx))
+(defn apply-actors [state func]
+    (assoc state :actors
+        (for [actor (state :actors)]
+            (func state actor))))
 
-(defn render-scene [canvas state]
-    (doseq [actor (get state :actors)] (render-actor canvas actor)))
+(defn render-actor [state actor]
+        (.beginPath (state :context))
+        (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
+        (set! ctx -fillStyle (actor :color))
+        (.fill ctx)
+        (identity actor))
 
-(defn create-state [] {:actors []})
+(defn update-actors [state]
+    (apply-actors state move-actor))
 
-(defn update-state [state]
-    (println "Update state")
+(defn render-scene [state]
+    (let [ctx (state :context)]
+        (doseq [actor (state :actors)]
+            (println "Rendor actor: " actor)
+            (.beginPath ctx)
+            (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
+            (set! ctx -fillStyle (actor :color))
+            (.fill ctx))))
+
+(defn update-scene [state]
     (-> state
         handle-mouse-click
-        move-actors))
-    (println "State: " state)
-
-(defn handle-mouse-click [state]
-    (let [x (@mouse-state :mousex)
-          y (@mouse-state :mousey)]
-        (if (and (> x 0) (> y 0)) (do
-            (println "Handle click")
-            (clear-mouse-state)
-            (let [state (create-actor state [x y])]
-                (println "State: " state)
-                (identity state)))
-        (identity state))))
+        update-actors))
 
 (defn distance [coords1 coords2]
     (let [result (map - coords2 coords1)]
-        (println "Coords1: " coords1)
-        (println "Coords2: " coords2)
-        (println "Result: " result)
         (identity result)))
 
 (defn attract [x y]
@@ -86,52 +89,54 @@
             (update-in actor [:coords]
                 attract-attractors (map :coords (state :actors))))))
 
-(defn inc-based-on-actors [coords state]
+(defn move-actor [state actor]
     (let [total (count (state :actors))]
-        (println "Inc Based")
-        (println "State: " state)
-        (println "Coords: " coords)
-        (println "Total " total)
-        (map (partial + total) coords)))
-
-(defn move-actors [state]
-    (assoc state :actors
-        (for [actor (state :actors)]
-            (update-in actor [:coords] inc-based-on-actors state))))
+        (update-in actor [:coords]
+            (partial map (partial + total)))))
 
 (defn create-actor [state coords]
-    (println "Create actor")
-    (println "Coords: " coords)
     (assoc state
         :actors
-        (conj (get state :actors) {:coords coords :color "#F00"})))
+        (conj (get state :actors) {
+            :coords coords
+            :color "#F00"
+            :heading (* (/ 7 8) tau)
+            :velocity 1})))
 
-(defn clear-screen [[ctx width height]]
-    ;(println "Clear screen")
+(defn clear-screen [ctx width height]
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn tick [ctx state]
-    (println "Tick")
-    (println "State: " state)
-    (clear-screen ctx)
-    (render-scene ctx state)
+(defn tick [state]
+    (apply clear-screen (map state '(:context :width :height)))
+    (render-scene state)
     (js/setTimeout (fn []
-        (tick ctx (update-state state))) 33))
+        (tick (update-scene state))) 33))
 
 (defn context [width height]
     (let [target (.getElementById js/document "canvas")]
-        ;(println "Canvas: " target)
         [(.getContext target "2d")
             (set! (. target -width) width)
             (set! (. target -height) height)]))
 
+; Just mouse things
+(defn handle-mouse-click [state]
+    (let [x (@mouse-state :mousex)
+          y (@mouse-state :mousey)]
+        (if (and (> x 0) (> y 0)) (do
+            (clear-mouse-state)
+            (let [state (create-actor state [x y])]
+                (identity state)))
+        (identity state))))
+
 (defn hook-input-events []
     (.addEventListener js/document "click"
         (fn [e]
-            (println "Register click")
+            (println "Click")
             (update-mouse-state (. e -clientX) (. e -clientY))
             false)))
+
+(def mouse-state (atom {:mousex -1 :mousey -1}))
 
 (defn update-mouse-state [x y]
     (swap! mouse-state assoc :mousex x)
@@ -142,7 +147,5 @@
     (swap! mouse-state assoc :mousey -1))
 
 (defn ^:export init []
-    (let [ctx (context 640 480)] [
-        ;(println "Context: " ctx)
-        (hook-input-events)
-        (tick ctx (create-state))]))
+    (hook-input-events)
+    (tick (apply create-state (context 640 480))))
