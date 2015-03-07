@@ -6,6 +6,9 @@
 (def tau (* pi 2))
 (def sqrt (.-sqrt js/Math))
 (def abs  (.-abs  js/Math))
+(def sin  (.-sin  js/Math))
+(def cos  (.-cos  js/Math))
+(def rand1  (.-random  js/Math))
 (defn sqr [x] (* x x))
 (defn avg [& col]
     (result (/ (reduce + col) (count col))))
@@ -37,7 +40,6 @@
 (defn render-scene [state]
     (let [ctx (state :context)]
         (doseq [actor (state :actors)]
-            (println "Rendor actor: " actor)
             (.beginPath ctx)
             (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
             (set! ctx -fillStyle (actor :color))
@@ -90,9 +92,12 @@
                 attract-attractors (map :coords (state :actors))))))
 
 (defn move-actor [state actor]
-    (let [total (count (state :actors))]
-        (update-in actor [:coords]
-            (partial map (partial + total)))))
+    (update-in actor [:coords]
+        ; Assumes 2D
+        (partial apply (fn [x y]
+            (vector
+                (+ x (cos (* (actor :heading) (actor :velocity))))
+                (+ y (sin (* (actor :heading) (actor :velocity)))))))))
 
 (defn create-actor [state coords]
     (assoc state
@@ -100,7 +105,7 @@
         (conj (get state :actors) {
             :coords coords
             :color "#F00"
-            :heading (* (/ 7 8) tau)
+            :heading (* (rand1) tau)
             :velocity 1})))
 
 (defn clear-screen [ctx width height]
