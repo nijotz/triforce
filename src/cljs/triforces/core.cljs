@@ -85,15 +85,19 @@
     (assoc state :actors
         (for [actor (state :actors)]
             (update-in actor [:coords]
-                attract-attractors (map :coords (state :actors))))))
+                attract-attractors (map :coords (state :actors)) ))))
+
+; Assumes 2D
+(defn move-vector [coords heading length]
+    (apply
+        (fn [x y] (vector
+            (+ x (* (cos heading) length))
+            (+ y (* (sin heading) length)) ))
+        coords))
 
 (defn move-actor [state actor]
     (update-in actor [:coords]
-        ; Assumes 2D
-        (partial apply (fn [x y]
-            (vector
-                (+ x (cos (* (actor :heading) (actor :velocity))))
-                (+ y (sin (* (actor :heading) (actor :velocity)))))))))
+        (fn [coords] (move-vector coords (actor :heading) (actor :velocity))) ))
 
 (defn create-actor [state coords]
     (assoc state
