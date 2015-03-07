@@ -28,22 +28,18 @@
             (func state actor))))
 
 (defn render-actor [state actor]
-        (.beginPath (state :context))
+    (let [ctx (state :context)]
+        (.beginPath ctx)
         (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
         (set! ctx -fillStyle (actor :color))
         (.fill ctx)
-        (identity actor))
+        (identity actor)))
 
 (defn update-actors [state]
     (apply-actors state move-actor))
 
 (defn render-scene [state]
-    (let [ctx (state :context)]
-        (doseq [actor (state :actors)]
-            (.beginPath ctx)
-            (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
-            (set! ctx -fillStyle (actor :color))
-            (.fill ctx))))
+    (doseq [actor (state :actors)] (render-actor state actor)))
 
 (defn update-scene [state]
     (-> state
