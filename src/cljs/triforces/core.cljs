@@ -29,11 +29,19 @@
 
 (defn render-actor [state actor]
     (let [ctx (state :context)]
+        ; Draw circle
         (.beginPath ctx)
         (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
         (set! ctx -fillStyle (actor :color))
         (.fill ctx)
-        (identity actor)))
+        (identity actor)
+
+        ; Draw heading
+        (.beginPath ctx)
+        (.moveTo ctx (nth (actor :coords) 0) (nth (actor :coords) 1))
+        (let [move-coords (move-vector (actor :coords) (actor :heading) 20)]
+            (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
+        (.stroke ctx) ))
 
 (defn update-actors [state]
     (apply-actors state move-actor))
