@@ -2,6 +2,7 @@
 
 (enable-console-print!)
 
+; Make JS math easier to use
 (def pi (.-PI js/Math))
 (def tau (* pi 2))
 (def sqrt (.-sqrt js/Math))
@@ -11,10 +12,7 @@
 (def rand1  (.-random  js/Math))
 (defn sqr [x] (* x x))
 (defn avg [& col]
-    (result (/ (reduce + col) (count col))))
-
-(defn vec-len [& coords]
-    (sqrt (apply + (map sqr coords))))
+    (/ (reduce + col) (count col)))
 
 (defn create-state [context width height] {
     :context context
@@ -44,7 +42,9 @@
         (.stroke ctx) ))
 
 (defn update-actors [state]
-    (apply-actors state move-actor))
+    (-> state
+        move-actors
+        avg-actors-heading))
 
 (defn render-scene [state]
     (doseq [actor (state :actors)] (render-actor state actor)))
@@ -53,6 +53,9 @@
     (-> state
         handle-mouse-click
         update-actors))
+
+(defn vec-len [& coords]
+    (sqrt (apply + (map sqr coords))))
 
 (defn distance [coords1 coords2]
     (let [result (map - coords2 coords1)]
@@ -103,6 +106,17 @@
             (+ y (* (sin heading) length)) ))
         coords))
 
+(defn avg-actors-heading [state]
+    (let [avg-heading (apply avg (map :heading (state :actors)))]
+        (apply-actors state
+            (fn [state actor] (avg-actor-heading avg-heading actor)) )))
+
+(defn avg-actor-heading [avg-heading actor]
+    (update-in actor [:heading] (fn [heading] (avg heading avg-heading))))
+
+(defn move-actors [state actor]
+    (apply-actors state move-actor))
+
 (defn move-actor [state actor]
     (update-in actor [:coords]
         (fn [coords] (move-vector coords (actor :heading) (actor :velocity))) ))
@@ -132,7 +146,6 @@
             (set! (. target -width) width)
             (set! (. target -height) height)]))
 
-; Just mouse things
 (defn handle-mouse-click [state]
     (let [x (@mouse-state :mousex)
           y (@mouse-state :mousey)]
