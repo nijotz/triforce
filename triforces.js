@@ -1,1 +1,0 @@
-dev-resources/public/js/triforces.js
