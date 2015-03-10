@@ -16,6 +16,9 @@
 
 (defn create-state [context width height] {
     :context context
+    :ticks 33
+    :ms_per_tick (/ 1000 33)
+    :next_tick (.getTime (js/Date.))
     :width width
     :height height
     :actors []})
@@ -47,6 +50,7 @@
         avg-actors-heading))
 
 (defn render-scene [state]
+    (apply clear-screen (map state '(:context :width :height)))
     (doseq [actor (state :actors)] (render-actor state actor)))
 
 (defn update-scene [state]
@@ -134,11 +138,25 @@
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn tick [state]
-    (apply clear-screen (map state '(:context :width :height)))
-    (render-scene state)
-    (js/setTimeout (fn []
-        (tick (update-scene state))) 33))
+(defn update-if-needed [timestamp state]
+    (if (> timestamp (+ (state :next_tick) (* (state :ms_per_tick) 10))) (do
+        (println "Resuming from pause")
+        (update-scene (assoc state :next_tick timestamp)) )
+    ; else if
+    (if (> timestamp (state :next_tick))
+        (update-scene (update-in state [:next_tick]
+            (partial + (state :ms_per_tick)) ))
+    ; else
+        (identity state) )))
+
+(defn game-loop [state]
+    (let [
+        timestamp (.getTime (js/Date.))
+        interp (/ (- (state :next_tick) timestamp) (state :ms_per_tick))]
+
+        (render-scene state interp)
+        (js/requestAnimationFrame (fn []
+            (game-loop (update-if-needed timestamp state))) )))
 
 (defn context [width height]
     (let [target (.getElementById js/document "canvas")]
@@ -151,9 +169,9 @@
           y (@mouse-state :mousey)]
         (if (and (> x 0) (> y 0)) (do
             (clear-mouse-state)
-            (let [state (create-actor state [x y])]
-                (identity state)))
-        (identity state))))
+            (create-actor state [x y]) )
+        ; else
+            (identity state))))
 
 (defn hook-input-events []
     (.addEventListener js/document "click"
@@ -174,4 +192,4 @@
 
 (defn ^:export init []
     (hook-input-events)
-    (tick (apply create-state (context 640 480))))
+    (game-loop (apply create-state (context 640 480))))
