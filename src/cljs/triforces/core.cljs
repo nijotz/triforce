@@ -13,14 +13,17 @@
 (defn sqr [x] (* x x))
 (defn avg [& col]
     (/ (reduce + col) (count col)))
+(defn get-timestamp [] (.getTime (js/Date.)))
 
 (defn create-state [context width height] {
     :context context
     :ticks 33
     :ms_per_tick (/ 1000 33)
     :next_tick (.getTime (js/Date.))
+    :frametimes []
     :width width
     :height height
+    :scale 1
     :actors []})
 
 (defn apply-actors [state func]
@@ -49,9 +52,29 @@
         move-actors
         avg-actors-heading))
 
+(defn update-fps [state]
+    (update-in state [:frametimes]
+        (fn [ft] (subvec (vec (cons (get-timestamp) ft)) 0 (+ 1 (min (count ft) 9)))) ))
+
+(defn display-fps [state]
+    (let [
+        frametimes (state :frametimes)
+        mspf (/ (- (first frametimes) (last frametimes)) (count frametimes))
+        fps (js/parseInt (* (/ 1 mspf) 1000))
+        fps-str (str "FPS: " fps)
+        ctx (state :context)]
+
+        (set! ctx -fillStyle "rgb(255,255,255)")
+        (set! ctx -strokeStyle "rgb(0,0,0)")
+        (set! ctx -textBaseline "bottom")
+        (set! ctx -font (str (/ 2 (state :scale)) + "em Arial"))
+        (.fillText ctx fps-str 5 (state :height))
+        (.strokeText ctx fps-str 5 (state :height)) ))
+
 (defn render-scene [state]
     (apply clear-screen (map state '(:context :width :height)))
-    (doseq [actor (state :actors)] (render-actor state actor)))
+    (doseq [actor (state :actors)] (render-actor state actor))
+    (display-fps state))
 
 (defn update-scene [state]
     (-> state
@@ -138,7 +161,7 @@
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn update-if-needed [timestamp state]
+(defn update-if-needed [state timestamp]
     (if (> timestamp (+ (state :next_tick) (* (state :ms_per_tick) 10))) (do
         (println "Resuming from pause")
         (update-scene (assoc state :next_tick timestamp)) )
@@ -151,12 +174,12 @@
 
 (defn game-loop [state]
     (let [
-        timestamp (.getTime (js/Date.))
+        timestamp (get-timestamp)
         interp (/ (- (state :next_tick) timestamp) (state :ms_per_tick))]
 
         (render-scene state interp)
         (js/requestAnimationFrame (fn []
-            (game-loop (update-if-needed timestamp state))) )))
+            (game-loop (update-if-needed (update-fps state) timestamp)) ))))
 
 (defn context [width height]
     (let [target (.getElementById js/document "canvas")]
