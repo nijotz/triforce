@@ -1,0 +1,4 @@
+lein cljsbuild once
+cd site
+python -m SimpleHTTPServer
+http://localhost:8000
