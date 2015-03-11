@@ -18,13 +18,17 @@
     (/ (reduce + col) (count col)))
 (def get-timestamp (.-now js/Date))
 
-; Assumes 2D
-(defn move-vector [coords heading length]
-    (apply
-        (fn [x y] (vector
-            (+ x (* (cos heading) length))
-            (+ y (* (sin heading) length)) ))
-        coords))
+(defn move-vector
+    ; Assumes 2D
+    ([coords heading speed]
+        (apply
+            (fn [x y] (vector
+                (+ x (* (cos heading) speed))
+                (+ y (* (sin heading) speed)) ))
+            coords))
+    ; TODO: take time into account (ms_per_tick / 1000)
+    ([coords velocity]
+        (map + coords velocity) ))
 
 ;;;
 ; Rendering
@@ -33,8 +37,11 @@
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn interpolate-coords [coords heading length interp]
-    (move-vector coords heading (* length interp)))
+(defn interpolate-coords
+    ([coords heading speed interp]
+        (move-vector coords heading (* speed interp)) )
+    ([coords velocity interp]
+        (move-vector coords (map (partial * interp) velocity)) ))
 
 (defn render-actor [ctx actor interp]
     (let [coords (interpolate-coords (actor :coords) (actor :heading) (actor :velocity) interp)]
