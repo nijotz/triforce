@@ -10,6 +10,9 @@
 (def sin  (.-sin  js/Math))
 (def cos  (.-cos  js/Math))
 (def rand1  (.-random  js/Math))
+(defn rand
+    ([] (rand1))
+    ([min max] (+ (* (rand1) (- max min)) min)) )
 (defn sqr [x] (* x x))
 (defn avg [& col]
     (/ (reduce + col) (count col)))
