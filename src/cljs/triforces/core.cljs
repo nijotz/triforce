@@ -13,7 +13,15 @@
 (defn sqr [x] (* x x))
 (defn avg [& col]
     (/ (reduce + col) (count col)))
-(defn get-timestamp [] (.getTime (js/Date.)))
+(def get-timestamp (.-now js/Date))
+
+; Assumes 2D
+(defn move-vector [coords heading length]
+    (apply
+        (fn [x y] (vector
+            (+ x (* (cos heading) length))
+            (+ y (* (sin heading) length)) ))
+        coords))
 
 ;;;
 ; Rendering
@@ -22,25 +30,28 @@
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn render-actor [state actor]
-    (let [ctx (state :context)]
+(defn interpolate-coords [coords heading length interp]
+    (move-vector coords heading (* length interp)))
+
+(defn render-actor [ctx actor interp]
+    (let [coords (interpolate-coords (actor :coords) (actor :heading) (actor :velocity) interp)]
         ; Draw circle
         (.beginPath ctx)
-        (.arc ctx (nth (actor :coords) 0) (nth (actor :coords) 1) 5 0 tau false)
+        (.arc ctx (nth coords 0) (nth coords 1) 5 0 tau false)
         (set! ctx -fillStyle (actor :color))
         (.fill ctx)
         (identity actor)
 
         ; Draw heading
         (.beginPath ctx)
-        (.moveTo ctx (nth (actor :coords) 0) (nth (actor :coords) 1))
-        (let [move-coords (move-vector (actor :coords) (actor :heading) 20)]
+        (.moveTo ctx (nth coords 0) (nth coords 1))
+        (let [move-coords (move-vector coords (actor :heading) 20)]
             (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
         (.stroke ctx) ))
 
 (defn render-scene [state interp]
     (apply clear-screen (map state '(:context :width :height)))
-    (doseq [actor (state :actors)] (render-actor state actor))
+    (doseq [actor (state :actors)] (render-actor (state :context) actor interp))
     (display-fps state))
 
 ;;;
@@ -97,7 +108,7 @@
             :coords coords
             :color "#F00"
             :heading (* (rand1) tau)
-            :velocity 1})))
+            :velocity 5})))
 
 ;;;
 ; FPS tracking and display
@@ -197,21 +208,13 @@
             (update-in actor [:coords]
                 attract-attractors (map :coords (state :actors)) ))))
 
-; Assumes 2D
-(defn move-vector [coords heading length]
-    (apply
-        (fn [x y] (vector
-            (+ x (* (cos heading) length))
-            (+ y (* (sin heading) length)) ))
-        coords))
-
 ;;;
 ; Initial state and game loop start
 ;;;
 (defn create-state [context width height] {
     :context context
-    :ticks 33
-    :ms_per_tick (/ 1000 33)
+    :ticks 10
+    :ms_per_tick (/ 1000 10)
     :next_tick (.getTime (js/Date.))
     :frametimes []
     :width width
@@ -228,8 +231,7 @@
 (defn game-loop [state]
     (let [
         timestamp (get-timestamp)
-        interp (/ (- (state :next_tick) timestamp) (state :ms_per_tick))]
-
+        interp (- 1 (/ (- (state :next_tick) timestamp) (state :ms_per_tick)))]
         (render-scene state interp)
         (js/requestAnimationFrame (fn []
             (game-loop (update-if-needed (update-fps state) timestamp)) ))))
