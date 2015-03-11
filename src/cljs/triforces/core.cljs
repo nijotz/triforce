@@ -44,7 +44,7 @@
         (move-vector coords (map (partial * interp) velocity)) ))
 
 (defn render-actor [ctx actor interp]
-    (let [coords (interpolate-coords (actor :coords) (actor :heading) (actor :velocity) interp)]
+    (let [coords (interpolate-coords (actor :coords) (actor :velocity) interp)]
         ; Draw circle
         (.beginPath ctx)
         (.arc ctx (nth coords 0) (nth coords 1) 5 0 tau false)
@@ -55,7 +55,7 @@
         ; Draw heading
         (.beginPath ctx)
         (.moveTo ctx (nth coords 0) (nth coords 1))
-        (let [move-coords (move-vector coords (actor :heading) 20)]
+        (let [move-coords (move-vector coords (map (partial * 5) (actor :velocity)))]
             (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
         (.stroke ctx) ))
 
@@ -106,7 +106,7 @@
 
 (defn move-actor [state actor]
     (update-in actor [:coords]
-        (fn [coords] (move-vector coords (actor :heading) (actor :velocity))) ))
+        (fn [coords] (move-vector coords (actor :velocity))) ))
 
 (defn move-actors [state actor]
     (apply-actors state move-actor))
@@ -117,8 +117,7 @@
         (conj (get state :actors) {
             :coords coords
             :color "#F00"
-            :heading (* (rand1) tau)
-            :velocity 5})))
+            :velocity [(rand -5 5) (rand -5 5)] })))
 
 ;;;
 ; FPS tracking and display
