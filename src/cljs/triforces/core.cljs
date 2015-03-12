@@ -1,15 +1,20 @@
 (ns triforces.core)
 
+; Turn console.log into println
 (enable-console-print!)
 
-; Make JS math easier to use
+;;;
+; Make JS math and misc functinos easier to use
+;;;
 (def pi (.-PI js/Math))
 (def tau (* pi 2))
 (def sqrt (.-sqrt js/Math))
 (def abs  (.-abs  js/Math))
 (def sin  (.-sin  js/Math))
 (def cos  (.-cos  js/Math))
-(def rand1  (.-random  js/Math))
+(def tan  (.-tan  js/Math))
+(def atan2 (.-atan2 js/Math))
+(def rand1 (.-random js/Math))
 (defn rand
     ([] (rand1))
     ([min max] (+ (* (rand1) (- max min)) min)) )
@@ -18,6 +23,9 @@
     (/ (reduce + col) (count col)))
 (def get-timestamp (.-now js/Date))
 
+;;;
+; Just vector things
+;;;
 (defn move-vector
     ; Assumes 2D
     ([coords heading speed]
@@ -29,6 +37,18 @@
     ; TODO: take time into account (ms_per_tick / 1000)
     ([coords velocity]
         (map + coords velocity) ))
+
+(defn point-at
+    ([coords1 coords2] (apply point-at (concat coords1 coords2)))
+    ([x1 y1 x2 y2]
+        (let [heading (atan2 (- x2 x1) (- y2 y1)) ]
+        (vector (sin heading) (cos heading)) )))
+
+(defn distance-squared [coords1 coords2]
+    (apply + (map sqr (map - coords1 coords2))) )
+
+(defn distance [coords1 coords2]
+    (sqrt (distance-squared coords1 coords2)))
 
 ;;;
 ; Rendering
@@ -50,7 +70,6 @@
         (.arc ctx (nth coords 0) (nth coords 1) 5 0 tau false)
         (set! ctx -fillStyle (actor :color))
         (.fill ctx)
-        (identity actor)
 
         ; Draw heading
         (.beginPath ctx)
@@ -59,10 +78,20 @@
             (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
         (.stroke ctx) ))
 
+(defn render-middle [state]
+    (let [midx (/ (state :width) 2)
+          midy (/ (state :height) 2)
+          ctx (state :context)]
+    (.beginPath ctx)
+    (.arc ctx midx midy 5 0 tau false)
+    (set! ctx -fillStyle "green")
+    (.fill ctx) ))
+
 (defn render-scene [state interp]
     (apply clear-screen (map state '(:context :width :height)))
     (doseq [actor (state :actors)] (render-actor (state :context) actor interp))
-    (display-fps state))
+    (display-fps state)
+    (render-middle state))
 
 ;;;
 ; Updating
@@ -81,7 +110,7 @@
 (defn update-actors [state]
     (-> state
         move-actors
-        avg-actors-heading))
+        attract-actors-to-middle))
 
 (defn update-scene [state]
     (-> state
@@ -96,13 +125,26 @@
         (for [actor (state :actors)]
             (func state actor))))
 
-(defn avg-actors-heading [state]
-    (let [avg-heading (apply avg (map :heading (state :actors)))]
-        (apply-actors state
-            (fn [state actor] (avg-actor-heading avg-heading actor)) )))
+(defn attraction-force-scalar [coords1 mass1 coords2 mass2]
+    (let [dist-sqr (distance-squared coords1 coords2)]
+    (if (< dist-sqr 1) 0
+    ; else
+    (* 6 (/ (* mass1 mass2) dist-sqr)) )))
 
-(defn avg-actor-heading [avg-heading actor]
-    (update-in actor [:heading] (fn [heading] (avg heading avg-heading))))
+(defn attraction-force [coords1 mass1 coords2 mass2]
+    (let [scalar (attraction-force-scalar coords1 mass1 coords2 mass2)]
+    (map (partial * scalar) (point-at coords1 coords2)) ))
+
+(defn attract-actor-to-middle [state actor]
+    (let [midx (/ (state :width) 2)
+          midy (/ (state :height) 2)
+          coords (actor :coords)
+          attr (attraction-force coords 10 [midx midy] 50)]
+    (update-in actor [:velocity]
+        (fn [velocity] (move-vector velocity attr)) )))
+
+(defn attract-actors-to-middle [state]
+    (apply-actors state attract-actor-to-middle))
 
 (defn move-actor [state actor]
     (update-in actor [:coords]
@@ -175,10 +217,6 @@
 ;;;
 (defn vec-len [& coords]
     (sqrt (apply + (map sqr coords))))
-
-(defn distance [coords1 coords2]
-    (let [result (map - coords2 coords1)]
-        (identity result)))
 
 (defn attract [x y]
     (let [distance (- x y)]
