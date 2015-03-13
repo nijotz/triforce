@@ -67,7 +67,7 @@
     (let [coords (interpolate-coords (actor :coords) (actor :velocity) interp)]
         ; Draw circle
         (.beginPath ctx)
-        (.arc ctx (nth coords 0) (nth coords 1) 5 0 tau false)
+        (.arc ctx (nth coords 0) (nth coords 1) (/ (actor :mass) 2) 0 tau false)
         (set! ctx -fillStyle (actor :color))
         (.fill ctx)
 
@@ -139,7 +139,8 @@
     (let [midx (/ (state :width) 2)
           midy (/ (state :height) 2)
           coords (actor :coords)
-          attr (attraction-force coords 10 [midx midy] 50)]
+          mass (actor :mass)
+          attr (attraction-force coords mass [midx midy] 50)]
     (update-in actor [:velocity]
         (fn [velocity] (move-vector velocity attr)) )))
 
@@ -158,8 +159,9 @@
         :actors
         (conj (get state :actors) {
             :coords coords
+            :velocity [(rand -5 5) (rand -5 5)]
             :color "#F00"
-            :velocity [(rand -5 5) (rand -5 5)] })))
+            :mass (rand 2 20) })))
 
 ;;;
 ; FPS tracking and display
