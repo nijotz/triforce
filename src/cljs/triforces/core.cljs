@@ -97,6 +97,8 @@
 ; Updating
 ;;;
 (defn update-if-needed [state timestamp]
+    ; If more than 10 ticks have gone by without an update, assume we were
+    ; paused because of requestAnimationFrame and set next_tick to now
     (if (> timestamp (+ (state :next_tick) (* (state :ms_per_tick) 10))) (do
         (println "Resuming from pause")
         (update-scene (assoc state :next_tick timestamp)) )
