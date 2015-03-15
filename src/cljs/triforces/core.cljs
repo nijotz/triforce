@@ -128,7 +128,10 @@
 ;;;
 (defn attraction-force-scalar [coords1 mass1 coords2 mass2]
     (let [dist-sqr (distance-squared coords1 coords2)]
-    (if (< dist-sqr 1) 0
+    ; This is to make things less "flingy". If things are close relative to
+    ; their masses, don't attract them together. They'll just get flung off the
+    ; canvas
+    (if (< dist-sqr (sqr (/ (+ mass1 mass2) 2))) 0
     ; else
     (* 6 (/ (* mass1 mass2) dist-sqr)) )))
 
@@ -141,7 +144,7 @@
           midy (/ (state :height) 2)
           coords (actor :coords)
           mass (actor :mass)
-          attr (attraction-force coords mass [midx midy] 100)]
+          attr (attraction-force coords mass [midx midy] 150)]
     (update-in actor [:velocity]
         (fn [velocity] (move-vector velocity attr)) )))
 
