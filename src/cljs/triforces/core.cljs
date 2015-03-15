@@ -264,10 +264,11 @@
 ;;;
 ; Initial state and game loop start
 ;;;
+(def ticks 10)
 (defn create-state [context width height] {
     :context context
-    :ticks 10
-    :ms_per_tick (/ 1000 10)
+    :ticks ticks
+    :ms_per_tick (/ 1000 ticks)
     :next_tick (.getTime (js/Date.))
     :frametimes []
     :width width
