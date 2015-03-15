@@ -262,49 +262,6 @@
             false)))
 
 ;;;
-; Things to eventually be used for triforces (Recycling Bin)
-;;;
-(defn vec-len [& coords]
-    (sqrt (apply + (map sqr coords))))
-
-(defn attract [x y]
-    (let [distance (- x y)]
-        (if (= distance 0)
-            (identity 0)
-            (/ 10 (sqr distance)))))
-
-(defn attract-one [base attractor]
-    ; Returns a vector representing the affect of the attractor on the base
-    (let [result (map attract base attractor)]
-        (println "Base: " base)
-        (println "Attractor: " attractor)
-        (println "Result: " result)
-        (identity result)))
-
-(defn attract-many [base & attractors]
-    (println "Second Base: " base)
-    (println "Second Attractors: " attractors)
-    (let [
-        attractors-result (map (partial attract-one base) attractors)]
-        (println "Attractors-Result: " attractors-result)
-        ; average each component of all the coordinates
-        (map (partial apply avg)
-            ; turn a list of grouped coordinates into a list of a single
-            ; component of every coordinate
-            (apply map vector
-                ; apply attract to a list of attractors
-                attractors-result))))
-
-(defn attract-attractors [base attractors]
-    (map + base (apply attract-many base attractors)))
-
-(defn attract-actors [state]
-    (assoc state :actors
-        (for [actor (state :actors)]
-            (update-in actor [:coords]
-                attract-attractors (map :coords (state :actors)) ))))
-
-;;;
 ; Initial state and game loop start
 ;;;
 (defn create-state [context width height] {
