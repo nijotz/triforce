@@ -115,7 +115,8 @@
 (defn update-actors [state]
     (-> state
         move-actors
-        attract-actors-to-middle))
+        attract-actors-to-middle
+        attract-actors-together))
 
 (defn update-scene [state]
     (-> state
@@ -123,13 +124,8 @@
         update-actors))
 
 ;;;
-; Actor things
+; Gravity
 ;;;
-(defn apply-actors [state func]
-    (assoc state :actors
-        (for [actor (state :actors)]
-            (func state actor))))
-
 (defn attraction-force-scalar [coords1 mass1 coords2 mass2]
     (let [dist-sqr (distance-squared coords1 coords2)]
     (if (< dist-sqr 1) 0
@@ -145,12 +141,58 @@
           midy (/ (state :height) 2)
           coords (actor :coords)
           mass (actor :mass)
-          attr (attraction-force coords mass [midx midy] 50)]
+          attr (attraction-force coords mass [midx midy] 100)]
     (update-in actor [:velocity]
         (fn [velocity] (move-vector velocity attr)) )))
 
 (defn attract-actors-to-middle [state]
     (apply-actors state attract-actor-to-middle))
+
+(defn attraction-force-pair [actor1 actor2]
+    (let [result (attraction-force (actor1 :coords) (actor1 :mass) (actor2 :coords) (actor2 :mass))]
+        [result (map - result)] ))
+
+(defn get-actor-attract-forces [state]
+    (all-pairs (state :actors) attraction-force-pair vector-add))
+
+(defn attract-actors-together [state]
+    (let [forces (get-actor-attract-forces state)]
+    (update-in state [:actors]
+        (fn [actors]
+            (map
+                (fn [actor f]
+                    (update-in actor [:velocity] (fn [v] (vector-add v f))) )
+                actors forces )))))
+
+(defn all-pairs [coll pair-fn sum-fn]
+    (loop [calc []
+           partial-calc (take (count coll) (repeat [0 0]))
+           uncalc coll
+           pair-fn pair-fn
+           sum-fn sum-fn]
+        (if (= (count uncalc) 0)
+            calc
+        ;else
+        (let [nxt (first uncalc)
+              nxt-partial-calc (first partial-calc)
+              other-partial-calc (next partial-calc)
+              new-calc-pairs (for [x (next uncalc)] (pair-fn nxt x))
+              new-calc-vals (map first new-calc-pairs)
+              other-calc-vals (map second new-calc-pairs)]
+            (recur
+                (conj calc (apply sum-fn (cons (or nxt-partial-calc [0 0]) new-calc-vals)))
+                (map sum-fn other-partial-calc (map second new-calc-pairs))
+                (next uncalc)
+                pair-fn sum-fn )))))
+
+;;;
+; Actor things
+;;;
+
+(defn apply-actors [state func]
+    (assoc state :actors
+        (for [actor (state :actors)]
+            (func state actor))))
 
 (defn move-actor [state actor]
     (update-in actor [:coords]
