@@ -36,7 +36,10 @@
             coords))
     ; TODO: take time into account (ms_per_tick / 1000)
     ([coords velocity]
-        (map + coords velocity) ))
+        (vector-add coords velocity) ))
+
+(defn vector-add [& vectors]
+    (apply map + vectors))
 
 (defn point-at
     ([coords1 coords2] (apply point-at (concat coords1 coords2)))
