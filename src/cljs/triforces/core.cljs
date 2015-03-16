@@ -75,11 +75,12 @@
         (.fill ctx)
 
         ; Draw heading
-        (.beginPath ctx)
-        (.moveTo ctx (nth coords 0) (nth coords 1))
-        (let [move-coords (move-vector coords (map (partial * 5) (actor :velocity)))]
-            (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
-        (.stroke ctx) ))
+        ;(.beginPath ctx)
+        ;(.moveTo ctx (nth coords 0) (nth coords 1))
+        ;(let [move-coords (move-vector coords (map (partial * 5) (actor :velocity)))]
+        ;    (.lineTo ctx (nth move-coords 0) (nth move-coords 1)))
+        ;(.stroke ctx)
+        ))
 
 (defn render-middle [state]
     (let [midx (/ (state :width) 2)
