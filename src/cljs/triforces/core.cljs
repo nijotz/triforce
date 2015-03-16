@@ -127,13 +127,15 @@
 ; Gravity
 ;;;
 (defn attraction-force-scalar [coords1 mass1 coords2 mass2]
-    (let [dist-sqr (distance-squared coords1 coords2)]
+    (let [dist-sqr (distance-squared coords1 coords2)
+          mass-multp (* mass1 mass2) ]
     ; This is to make things less "flingy". If things are close relative to
     ; their masses, don't attract them together. They'll just get flung off the
     ; canvas
-    (if (< dist-sqr (sqr (/ (+ mass1 mass2) 2))) 0
+    (if (< dist-sqr mass-multp)
+        (* 6 (/ dist-sqr mass-multp))
     ; else
-    (* 6 (/ (* mass1 mass2) dist-sqr)) )))
+        (* 6 (/ mass-multp dist-sqr)) )))
 
 (defn attraction-force [coords1 mass1 coords2 mass2]
     (let [scalar (attraction-force-scalar coords1 mass1 coords2 mass2)]
@@ -191,7 +193,6 @@
 ;;;
 ; Actor things
 ;;;
-
 (defn apply-actors [state func]
     (assoc state :actors
         (for [actor (state :actors)]
