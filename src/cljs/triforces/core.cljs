@@ -111,6 +111,7 @@
 (defn update-actors [state]
     (-> state
         move-actors
+        reflect-actors
         attract-actors-to-middle
         attract-actors-together))
 
@@ -204,6 +205,38 @@
 
 (defn move-actors [state]
     (apply-actors state move-actor nil))
+
+(defn reflect-actor-edge [actor coord-idx edge]
+    (-> actor
+        ; Coords is a LazySeq, but needs to be a Vector for update-in [:x 1] to
+        ; work
+        ((fn [actor] (update-in actor [:velocity] vec)))
+        ((fn [actor] (update-in actor [:coords] vec)))
+
+        ((fn [actor] (update-in actor [:velocity coord-idx] #(- %1))))
+        ((fn [actor] (update-in actor [:coords coord-idx] #(- edge (- %1 edge)))) )))
+
+; It'd be nice to figure out how to do this without the copied and pasted code
+(defn reflect-actor [actor state]
+    (let [coords (actor :coords)
+          width (state :width)
+          height (state :height)]
+    (-> actor
+        (#(if (< (nth coords 0) 0)
+            (reflect-actor-edge %1 0 0)
+            %1))
+        (#(if (> (nth coords 0) width)
+            (reflect-actor-edge %1 0 width)
+            %1))
+        (#(if (< (nth coords 1) 0)
+            (reflect-actor-edge %1 1 0)
+            %1))
+        (#(if (> (nth coords 1) height)
+            (reflect-actor-edge %1 1 height)
+            %1)) )))
+
+(defn reflect-actors [state]
+    (apply-actors state reflect-actor [state]))
 
 (defn create-actor [state coords]
     (assoc state
