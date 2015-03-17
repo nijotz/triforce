@@ -60,14 +60,9 @@
     (set! (. ctx -fillStyle) "#FFF")
     (.clearRect ctx 0 0 width height))
 
-(defn interpolate-coords
-    ([coords heading speed interp]
-        (move-vector coords heading (* speed interp)) )
-    ([coords velocity interp]
-        (move-vector coords (map (partial * interp) velocity)) ))
-
 (defn render-actor [ctx actor interp]
-    (let [coords (interpolate-coords (actor :coords) (actor :velocity) interp)]
+    (let [interp-actor (move-actor actor interp)
+          coords (interp-actor :coords)]
         ; Draw circle
         (.beginPath ctx)
         (.arc ctx (nth coords 0) (nth coords 1) (/ (actor :mass) 2) 0 tau false)
@@ -142,7 +137,7 @@
     (let [scalar (attraction-force-scalar coords1 mass1 coords2 mass2)]
     (map (partial * scalar) (point-at coords1 coords2)) ))
 
-(defn attract-actor-to-middle [state actor]
+(defn attract-actor-to-middle [actor state]
     (let [midx (/ (state :width) 2)
           midy (/ (state :height) 2)
           coords (actor :coords)
@@ -152,7 +147,7 @@
         (fn [velocity] (move-vector velocity attr)) )))
 
 (defn attract-actors-to-middle [state]
-    (apply-actors state attract-actor-to-middle))
+    (apply-actors state attract-actor-to-middle [state]))
 
 (defn attraction-force-pair [actor1 actor2]
     (let [result (attraction-force (actor1 :coords) (actor1 :mass) (actor2 :coords) (actor2 :mass))]
@@ -194,17 +189,21 @@
 ;;;
 ; Actor things
 ;;;
-(defn apply-actors [state func]
+(defn apply-actors [state func args]
     (assoc state :actors
         (for [actor (state :actors)]
-            (func state actor))))
+            (apply func actor args) )))
 
-(defn move-actor [state actor]
-    (update-in actor [:coords]
-        (fn [coords] (move-vector coords (actor :velocity))) ))
+(defn move-actor
+    ([actor]
+        (update-in actor [:coords]
+            (fn [coords] (move-vector coords (actor :velocity))) ))
+    ([actor interp]
+        (update-in actor [:coords]
+            (fn [coords] (move-vector coords (map (partial * interp) (actor :velocity)))) )))
 
-(defn move-actors [state actor]
-    (apply-actors state move-actor))
+(defn move-actors [state]
+    (apply-actors state move-actor nil))
 
 (defn create-actor [state coords]
     (assoc state
