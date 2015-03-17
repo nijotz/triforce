@@ -264,7 +264,12 @@
         (fn [e]
             (println "Click")
             (update-mouse-state (. e -clientX) (. e -clientY))
-            false)))
+            false))
+    (.addEventListener js/document "touchend"
+        (fn [e]
+            (println "Click")
+            (update-mouse-state (. e -clientX) (. e -clientY))
+            false) ))
 
 ;;;
 ; Initial state and game loop start
@@ -286,13 +291,20 @@
         [(.getContext target "2d")
             (set! (. target -width) width)
             (set! (. target -height) height)]))
+(def animation-frame
+  (or (.-requestAnimationFrame js/window)
+      (.-webkitRequestAnimationFrame js/window)
+      (.-mozRequestAnimationFrame js/window)
+      (.-oRequestAnimationFrame js/window)
+      (.-msRequestAnimationFrame js/window)
+      (fn [callback] (js/setTimeout callback 17))))
 
 (defn game-loop [state]
     (let [
         timestamp (get-timestamp)
         interp (- 1 (/ (- (state :next_tick) timestamp) (state :ms_per_tick)))]
         (render-scene state interp)
-        (js/requestAnimationFrame (fn []
+        (animation-frame (fn []
             (game-loop (update-if-needed (update-fps state) timestamp)) ))))
 
 (defn ^:export init []
