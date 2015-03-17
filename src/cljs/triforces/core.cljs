@@ -259,23 +259,25 @@
         ; else
             (identity state))))
 
-(defn hook-input-events []
-    (.addEventListener js/document "click"
+(defn hook-input-events [state]
+    (let [canvas (state :canvas)]
+    (.addEventListener canvas "click"
         (fn [e]
             (println "Click")
             (update-mouse-state (. e -clientX) (. e -clientY))
-            false))
-    (.addEventListener js/document "touchend"
+            false ))
+    (.addEventListener canvas "touchstart"
         (fn [e]
             (println "Click")
             (update-mouse-state (. e -clientX) (. e -clientY))
-            false) ))
+            false ))))
 
 ;;;
 ; Initial state and game loop start
 ;;;
 (def ticks 10)
-(defn create-state [context width height] {
+(defn create-state [canvas context width height] {
+    :canvas canvas
     :context context
     :ticks ticks
     :ms_per_tick (/ 1000 ticks)
@@ -288,16 +290,18 @@
 
 (defn context [width height]
     (let [target (.getElementById js/document "canvas")]
-        [(.getContext target "2d")
-            (set! (. target -width) width)
-            (set! (. target -height) height)]))
+        [target
+         (.getContext target "2d")
+         (set! (. target -width) width)
+         (set! (. target -height) height) ]))
+
 (def animation-frame
   (or (.-requestAnimationFrame js/window)
       (.-webkitRequestAnimationFrame js/window)
       (.-mozRequestAnimationFrame js/window)
       (.-oRequestAnimationFrame js/window)
       (.-msRequestAnimationFrame js/window)
-      (fn [callback] (js/setTimeout callback 17))))
+      (fn [callback] (js/setTimeout callback 17)) ))
 
 (defn game-loop [state]
     (let [
@@ -308,5 +312,6 @@
             (game-loop (update-if-needed (update-fps state) timestamp)) ))))
 
 (defn ^:export init []
-    (hook-input-events)
-    (game-loop (apply create-state (context 640 480))))
+    (let [state (apply create-state (context 640 480))]
+    (hook-input-events state)
+    (game-loop state) ))
