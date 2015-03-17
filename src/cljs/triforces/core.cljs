@@ -222,19 +222,17 @@
         (fn [ft] (subvec (vec (cons (get-timestamp) ft)) 0 (+ 1 (min (count ft) 9)))) ))
 
 (defn display-fps [state]
-    (let [
-        frametimes (state :frametimes)
-        mspf (/ (- (first frametimes) (last frametimes)) (count frametimes))
-        fps (js/parseInt (* (/ 1 mspf) 1000))
-        fps-str (str "FPS: " fps)
-        ctx (state :context)]
-
-        (set! ctx -fillStyle "rgb(255,255,255)")
-        (set! ctx -strokeStyle "rgb(0,0,0)")
-        (set! ctx -textBaseline "bottom")
-        (set! ctx -font (str (/ 2 (state :scale)) + "em Arial"))
-        (.fillText ctx fps-str 5 (state :height))
-        (.strokeText ctx fps-str 5 (state :height)) ))
+    (let [frametimes (state :frametimes)
+          mspf (/ (- (first frametimes) (last frametimes)) (count frametimes))
+          fps (js/parseInt (* (/ 1 mspf) 1000))
+          fps-str (str "FPS: " fps)
+          ctx (state :context)]
+    (set! ctx -fillStyle "rgb(255,255,255)")
+    (set! ctx -strokeStyle "rgb(0,0,0)")
+    (set! ctx -textBaseline "bottom")
+    (set! ctx -font (str (/ 2 (state :scale)) + "em Arial"))
+    (.fillText ctx fps-str 5 (state :height))
+    (.strokeText ctx fps-str 5 (state :height)) ))
 
 ;;;
 ; Just mouse things
