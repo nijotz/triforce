@@ -16,3 +16,5 @@ pom.xml
 .crossover-cljs
 .repl
 *.swp
+.gorilla-port
+.nrepl-port
