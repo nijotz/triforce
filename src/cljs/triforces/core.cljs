@@ -161,14 +161,15 @@
 (defn get-actor-attract-forces [state]
     (all-pairs (state :actors) attraction-force-pair vector-add))
 
+(defn apply-force-to-actor [actor f]
+    (let [accel (map #(/ %1 (actor :mass)) f)]
+    (update-in actor [:velocity] (fn [v] (vector-add v accel))) ))
+
 (defn attract-actors-together [state]
     (let [forces (get-actor-attract-forces state)]
     (update-in state [:actors]
         (fn [actors]
-            (map
-                (fn [actor f]
-                    (update-in actor [:velocity] (fn [v] (vector-add v f))) )
-                actors forces )))))
+            (map apply-force-to-actor actors forces) ))))
 
 (defn all-pairs [coll pair-fn sum-fn]
     (loop [calc []
