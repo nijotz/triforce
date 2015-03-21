@@ -41,6 +41,11 @@
 (defn vector-add [& vectors]
     (apply map + vectors))
 
+(defn point-left [coords]
+    (let [x (nth coords 0)
+          y (nth coords 1)]
+    [y, (- x)] ))
+
 (defn point-at
     ([coords1 coords2] (apply point-at (concat coords1 coords2)))
     ([x1 y1 x2 y2]
@@ -239,13 +244,18 @@
     (apply-actors state reflect-actor [state]))
 
 (defn create-actor [state coords]
+    (let [mid-coords [(/ (state :width) 2) (/ (state :height) 2)]
+          x (nth coords 0)
+          y (nth coords 1)]
     (assoc state
         :actors
         (conj (get state :actors) {
             :coords coords
-            :velocity [(rand -5 5) (rand -5 5)]
+            :velocity (map
+                (partial * (rand 3 10))
+                (point-left (point-at coords mid-coords)))
             :color "#F00"
-            :mass (rand 2 20) })))
+            :mass (rand 2 20) }))))
 
 ;;;
 ; FPS tracking and display
