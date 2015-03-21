@@ -219,7 +219,7 @@
 ; It'd be nice to figure out how to do this without the copied and pasted code
 (defn reflect-actor [actor state]
     (let [coords (actor :coords)
-          width (state :width)
+          width  (state :width)
           height (state :height)]
     (-> actor
         (#(if (< (nth coords 0) 0)
@@ -318,12 +318,14 @@
     :scale 1
     :actors []})
 
-(defn context [width height]
-    (let [target (.getElementById js/document "canvas")]
-        [target
-         (.getContext target "2d")
-         (set! (. target -width) width)
-         (set! (. target -height) height) ]))
+(defn context []
+    (let [canvas (.getElementById js/document "experiment")
+          width  (. canvas -clientWidth)
+          height (. canvas -clientHeight)]
+    [canvas
+     (.getContext canvas "2d")
+     (set! (. canvas -width) width)
+     (set! (. canvas -height) height) ]))
 
 (def animation-frame
   (or (.-requestAnimationFrame js/window)
@@ -342,6 +344,6 @@
             (game-loop (update-if-needed (update-fps state) timestamp)) ))))
 
 (defn ^:export init []
-    (let [state (apply create-state (context 640 480))]
+    (let [state (apply create-state (context))]
     (hook-input-events state)
     (game-loop state) ))
