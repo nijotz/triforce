@@ -93,9 +93,9 @@
 
 (defn render-scene [state interp]
     (apply clear-screen (map state '(:context :width :height)))
+    (render-middle state)
     (doseq [actor (state :actors)] (render-actor (state :context) actor interp))
-    (display-fps state)
-    (render-middle state))
+    (display-fps state) )
 
 ;;;
 ; Updating
@@ -273,7 +273,7 @@
     (set! ctx -fillStyle "rgb(255,255,255)")
     (set! ctx -strokeStyle "rgb(0,0,0)")
     (set! ctx -textBaseline "bottom")
-    (set! ctx -font (str (/ 2 (state :scale)) + "em Arial"))
+    (set! ctx -font (str (/ 2 (state :scale)) "em Arial"))
     (.fillText ctx fps-str 5 (state :height))
     (.strokeText ctx fps-str 5 (state :height)) ))
 
