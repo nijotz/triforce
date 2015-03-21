@@ -218,7 +218,7 @@
         ((fn [actor] (update-in actor [:velocity] vec)))
         ((fn [actor] (update-in actor [:coords] vec)))
 
-        ((fn [actor] (update-in actor [:velocity coord-idx] #(- %1))))
+        ((fn [actor] (update-in actor [:velocity coord-idx] #(- (* 0.75 %1)))))
         ((fn [actor] (update-in actor [:coords coord-idx] #(- edge (- %1 edge)))) )))
 
 ; It'd be nice to figure out how to do this without the copied and pasted code
