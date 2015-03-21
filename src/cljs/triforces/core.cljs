@@ -87,7 +87,7 @@
           midy (/ (state :height) 2)
           ctx (state :context)]
     (.beginPath ctx)
-    (.arc ctx midx midy 5 0 tau false)
+    (.arc ctx midx midy 10 0 tau false)
     (set! ctx -fillStyle "green")
     (.fill ctx) ))
 
@@ -130,14 +130,13 @@
 ;;;
 (defn attraction-force-scalar [coords1 mass1 coords2 mass2]
     (let [dist-sqr (distance-squared coords1 coords2)
-          mass-multp (* mass1 mass2) ]
+          mass-multp (* 10 mass1 mass2) ]
     ; This is to make things less "flingy". If things are close relative to
-    ; their masses, don't attract them together. They'll just get flung off the
-    ; canvas
+    ; their masses, don't attract them together as much.
     (if (< dist-sqr mass-multp)
-        (* 6 (/ dist-sqr mass-multp))
+        (* 10 (/ dist-sqr mass-multp))
     ; else
-        (* 6 (/ mass-multp dist-sqr)) )))
+        (* 10 (/ mass-multp dist-sqr)) )))
 
 (defn attraction-force [coords1 mass1 coords2 mass2]
     (let [scalar (attraction-force-scalar coords1 mass1 coords2 mass2)]
@@ -148,7 +147,7 @@
           midy (/ (state :height) 2)
           coords (actor :coords)
           mass (actor :mass)
-          attr (attraction-force coords mass [midx midy] 150)]
+          attr (attraction-force coords mass [midx midy] 20)]
     (update-in actor [:velocity]
         (fn [velocity] (move-vector velocity attr)) )))
 
