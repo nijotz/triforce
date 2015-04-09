@@ -79,7 +79,7 @@
           midy (/ (state :height) 2)
           ctx (state :context)]
     (.beginPath ctx)
-    (.arc ctx midx midy 10 0 tau false)
+    (.arc ctx midx midy 20 0 tau false)
     (set! ctx -fillStyle "green")
     (.fill ctx) ))
 
@@ -122,13 +122,13 @@
 ;;;
 (defn attraction-force-scalar [coords1 mass1 coords2 mass2]
     (let [dist-sqr (distance-squared coords1 coords2)
-          mass-multp (* 10 mass1 mass2) ]
+          mass-multp (* 50 mass1 mass2) ]
     ; This is to make things less "flingy". If things are close relative to
     ; their masses, don't attract them together as much.
     (if (< dist-sqr mass-multp)
-        (* 10 (/ dist-sqr mass-multp))
+        (* 50 (/ dist-sqr mass-multp))
     ; else
-        (* 10 (/ mass-multp dist-sqr)) )))
+        (* 50 (/ mass-multp dist-sqr)) )))
 
 (defn attraction-force [coords1 mass1 coords2 mass2]
     (let [scalar (attraction-force-scalar coords1 mass1 coords2 mass2)]
@@ -140,7 +140,7 @@
           coords (actor :coords)
           mass (actor :mass)
           secs (state :secs_per_tick)
-          attrn (attraction-force coords mass [midx midy] 20)
+          attrn (attraction-force coords mass [midx midy] 40)
           v-delta (map (partial * secs) attrn)]
     (update-in actor [:velocity]
         (fn [velocity] (move-vector velocity v-delta)) )))
@@ -246,7 +246,7 @@
         (conj (get state :actors) {
             :coords coords
             :velocity (map
-                (partial * (rand 3 10))
+                (partial * (rand 30 100))
                 (point-left (point-at coords mid-coords)))
             :color "#F00"
             :mass (rand 2 20) }))))
