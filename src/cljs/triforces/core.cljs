@@ -61,8 +61,8 @@
 ; Rendering
 ;;;
 (defn clear-screen [ctx width height]
-    (set! (. ctx -fillStyle) "#FFF")
-    (.clearRect ctx 0 0 width height))
+    (set! (. ctx -fillStyle) "black")
+    (.fillRect ctx 0 0 width height))
 
 (defn render-actor [ctx actor interp]
     (let [interp-actor (move-actor actor interp)
