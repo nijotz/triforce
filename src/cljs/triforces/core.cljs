@@ -64,9 +64,10 @@
     (set! (. ctx -fillStyle) "black")
     (.fillRect ctx 0 0 width height))
 
-(defn render-actor [ctx actor interp]
-    (let [interp-actor (move-actor actor interp)
-          coords (interp-actor :coords)]
+(defn render-actor [state actor interp]
+    (let [interp-actor (move-actor actor (state :secs_per_tick) interp)
+          coords (interp-actor :coords)
+          ctx (state :context)]
         ; Draw circle
         (.beginPath ctx)
         (.arc ctx (nth coords 0) (nth coords 1) (/ (actor :mass) 2) 0 tau false)
@@ -85,7 +86,7 @@
 (defn render-scene [state interp]
     (apply clear-screen (map state '(:context :width :height)))
     (render-middle state)
-    (doseq [actor (state :actors)] (render-actor (state :context) actor interp))
+    (doseq [actor (state :actors)] (render-actor state actor interp))
     (display-fps state) )
 
 ;;;
@@ -138,9 +139,11 @@
           midy (/ (state :height) 2)
           coords (actor :coords)
           mass (actor :mass)
-          attr (attraction-force coords mass [midx midy] 20)]
+          secs (state :secs_per_tick)
+          attrn (attraction-force coords mass [midx midy] 20)
+          v-delta (map (partial * secs) attrn)]
     (update-in actor [:velocity]
-        (fn [velocity] (move-vector velocity attr)) )))
+        (fn [velocity] (move-vector velocity v-delta)) )))
 
 (defn attract-actors-to-middle [state]
     (apply-actors state attract-actor-to-middle [state]))
@@ -192,15 +195,15 @@
             (apply func actor args) )))
 
 (defn move-actor
-    ([actor]
+    ([actor seconds]
         (update-in actor [:coords]
-            (fn [coords] (move-vector coords (actor :velocity))) ))
-    ([actor interp]
+            (fn [coords] (move-vector coords (map (partial * seconds) (actor :velocity)))) ))
+    ([actor seconds interp]
         (update-in actor [:coords]
-            (fn [coords] (move-vector coords (map (partial * interp) (actor :velocity)))) )))
+            (fn [coords] (move-vector coords (map (partial * seconds interp) (actor :velocity)))) )))
 
 (defn move-actors [state]
-    (apply-actors state move-actor nil))
+    (apply-actors state move-actor [(state :secs_per_tick)]))
 
 (defn reflect-actor-edge [actor coord-idx edge]
     (-> actor
@@ -312,6 +315,7 @@
     :context context
     :ticks ticks
     :ms_per_tick (/ 1000 ticks)
+    :secs_per_tick (/ 1 ticks)
     :next_tick (.getTime (js/Date.))
     :frametimes []
     :width width
