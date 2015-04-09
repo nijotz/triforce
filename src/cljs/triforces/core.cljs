@@ -28,15 +28,14 @@
 ;;;
 (defn move-vector
     ; Assumes 2D
-    ([coords heading speed]
+    ([vect heading speed]
         (apply
             (fn [x y] (vector
                 (+ x (* (cos heading) speed))
                 (+ y (* (sin heading) speed)) ))
-            coords))
-    ; TODO: take time into account (ms_per_tick / 1000)
-    ([coords velocity]
-        (vector-add coords velocity) ))
+            vect))
+    ([vect vect-delta]
+        (vector-add vect vect-delta) ))
 
 (defn vector-add [& vectors]
     (apply map + vectors))
