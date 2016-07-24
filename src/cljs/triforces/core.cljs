@@ -83,8 +83,18 @@
     (set! ctx -fillStyle "green")
     (.fill ctx) ))
 
+(defn render-spacetime [state]
+    (let [res (state :spacetime_resolution)
+          ctx (state :context)
+          spacetime (state :spacetime)]
+        (doseq [[yindex row] (map-indexed vector spacetime)]
+            (doseq [[xindex quad] (map-indexed vector row)]
+                (set! (. ctx -fillStyle) (str "rgb(0, 0, " (str (+ xindex yindex)) ")" ))
+                (.fillRect ctx (* xindex res) (* yindex res) res res) ))))
+
 (defn render-scene [state interp]
     (apply clear-screen (map state '(:context :width :height)))
+    (render-spacetime state)
     (render-middle state)
     (doseq [actor (state :actors)] (render-actor state actor interp))
     (display-fps state) )
@@ -321,7 +331,15 @@
     :width width
     :height height
     :scale 1
-    :actors []})
+    :actors []
+    :spacetime_resolution 30
+    :spacetime (create-spacetime (int (/ width 30)) (int (/ height 30))) })
+
+(defn create-spacetime [width height]
+    ; vector of rows
+    (vec (take height (repeat
+        ; vector of zeros for the width
+        (vec (take width (repeat 0))) ))))
 
 (defn context []
     (let [canvas (.getElementById js/document "experiment")
@@ -333,12 +351,12 @@
      (set! (. canvas -height) height) ]))
 
 (def animation-frame
-  (or (.-requestAnimationFrame js/window)
-      (.-webkitRequestAnimationFrame js/window)
-      (.-mozRequestAnimationFrame js/window)
-      (.-oRequestAnimationFrame js/window)
-      (.-msRequestAnimationFrame js/window)
-      (fn [callback] (js/setTimeout callback 17)) ))
+    (or (.-requestAnimationFrame js/window)
+        (.-webkitRequestAnimationFrame js/window)
+        (.-mozRequestAnimationFrame js/window)
+        (.-oRequestAnimationFrame js/window)
+        (.-msRequestAnimationFrame js/window)
+        (fn [callback] (js/setTimeout callback 17)) ))
 
 (defn game-loop [state]
     (let [
