@@ -3,8 +3,8 @@
 (ns triforces.core-test
   (:require-macros [cemerick.cljs.test :as m :refer (deftest testing are)])
   (:require [cemerick.cljs.test :as t]
-            [triforces.core :refer (vec-len)]))
+            [triforces.core :refer (vector-add)]))
 
 (deftest normalize-vector
-  (testing "(vec-len 3 4)"
-    (is (= 5 (vec-len 3 4)))))
+  (testing "(vector-add [3 4] [1 2])"
+    (is (= [4 6] (vector-add [3 4] [1 2]))) ))

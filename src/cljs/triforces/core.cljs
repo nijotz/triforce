@@ -3,6 +3,18 @@
 ; Turn console.log into println
 (enable-console-print!)
 
+(defmacro breakpoint []
+    '(do (js* "debugger;;")
+         nil)) ; (prevent "return debugger;" in compiled javascript)
+
+(defn- inspect-1 [expr]
+    `(let [result# ~expr]
+        (js/console.info (str (pr-str '~expr) " => " (pr-str result#)))
+        result#))
+
+(defmacro inspect [& exprs]
+    `(do ~@(map inspect-1 exprs)))
+
 ;;;
 ; Make JS math and misc functinos easier to use
 ;;;
@@ -89,7 +101,7 @@
           spacetime (state :spacetime)]
         (doseq [[yindex row] (map-indexed vector spacetime)]
             (doseq [[xindex quad] (map-indexed vector row)]
-                (set! (. ctx -fillStyle) (str "rgb(0, 0, " (str (+ xindex yindex)) ")" ))
+                (set! (. ctx -fillStyle) (str "rgb(0, 0, " (str (* quad 10)) ")" ))
                 (.fillRect ctx (* xindex res) (* yindex res) res res) ))))
 
 (defn render-scene [state interp]
@@ -197,6 +209,21 @@
                 pair-fn sum-fn )))))
 
 ;;;
+; Spacetime things
+;;;
+(defn create-spacetime [width height]
+    ; vector of rows
+    (vec (take height (repeat
+        ; vector of zeros for the width
+        (vec (take width (repeat 0))) ))))
+
+(defn update-spacetime [actor spacetime]
+    ;(let [spacetime_coords (map int (map (apply / [10]) (actor :coords)))]
+        (breakpoint)
+        (update-in spacetime [2 2];spacetime_coords
+            (fn [quad] (+ quad (actor :mass))) )) ;)
+
+;;;
 ; Actor things
 ;;;
 (defn apply-actors [state func args]
@@ -213,7 +240,8 @@
             (fn [coords] (move-vector coords (map (partial * seconds interp) (actor :velocity)))) )))
 
 (defn move-actors [state]
-    (apply-actors state move-actor [(state :secs_per_tick)]))
+    (apply-actors state move-actor [(state :secs_per_tick)])
+    (apply-actors state update-spacetime [(state :spacetime)]) )
 
 (defn reflect-actor-edge [actor coord-idx edge]
     (-> actor
@@ -334,12 +362,6 @@
     :actors []
     :spacetime_resolution 30
     :spacetime (create-spacetime (int (/ width 30)) (int (/ height 30))) })
-
-(defn create-spacetime [width height]
-    ; vector of rows
-    (vec (take height (repeat
-        ; vector of zeros for the width
-        (vec (take width (repeat 0))) ))))
 
 (defn context []
     (let [canvas (.getElementById js/document "experiment")
