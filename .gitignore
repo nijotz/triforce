@@ -3,7 +3,7 @@
 /lib
 /classes
 /checkouts
-/dev-resources/public/js/*
+/resources
 /out
 pom.xml
 *.jar
@@ -18,3 +18,4 @@ pom.xml
 *.swp
 .gorilla-port
 .nrepl-port
+figwheel_server.log

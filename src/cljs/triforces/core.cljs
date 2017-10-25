@@ -219,7 +219,6 @@
 
 (defn update-spacetime [actor spacetime]
     ;(let [spacetime_coords (map int (map (apply / [10]) (actor :coords)))]
-        (breakpoint)
         (update-in spacetime [2 2];spacetime_coords
             (fn [quad] (+ quad (actor :mass))) )) ;)
 
@@ -259,6 +258,7 @@
           width  (state :width)
           height (state :height)]
     (-> actor
+        (breakpoint)
         (#(if (< (nth coords 0) 0)
             (reflect-actor-edge %1 0 0)
             %1))
